@@ -1,10 +1,14 @@
+ENTRY(0)
+
 MEMORY {
     main (rwx) : ORIGIN = 0, LENGTH = 16K
 }
 
+_estack = ORIGIN(main) + LENGTH(main);
+
 SECTIONS {
     .text : { 
-        *(.entry)
+        *(_start)
         *(.text)
         *(.rodata)
         *(.data)

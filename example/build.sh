@@ -4,14 +4,20 @@ mkdir -p build
 
 echo "*" > build/.gitignore
 
-CFLAGS="--target=riscv32 -march=rv32i -nostdlib -Os"
 CLANG="/usr/bin/clang"
 LD="/usr/bin/ld.lld"
-LDFLAGS="-Tlink.ld"
+OBJCOPY="/usr/bin/llvm-objcopy"
 
-$CLANG $CFLAGS main.c -S -o build/main.s
-$CLANG $CFLAGS main.c -c -o build/main.o
+CFLAGS="$CFLAGS --target=riscv32 -march=rv32i -nostdlib"
+LDFLAGS="$LDFLAGS -Tlink.ld"
 
-$LD $LDFLAGS build/main.o -o build/example.o
+BUILDDIR="build"
 
-llvm-objcopy -O binary build/example.o build/example.bin
+$CLANG $CFLAGS src/main.c -S -o "$BUILDDIR"/main.s
+$CLANG $CFLAGS src/_start.s -c -o "$BUILDDIR"/_start.o
+$CLANG $CFLAGS src/syscall.s -c -o "$BUILDDIR"/syscall.o
+$CLANG $CFLAGS src/main.c -c -o "$BUILDDIR"/main.o
+
+$LD $LDFLAGS -o "$BUILDDIR"/example.o "$BUILDDIR"/_start.o "$BUILDDIR"/syscall.o "$BUILDDIR"/main.o
+
+$OBJCOPY -O binary "$BUILDDIR"/example.o "$BUILDDIR"/example.bin

@@ -201,9 +201,12 @@ void Interpreter::Tick() {
   } else if (i.unknown.opcode == opcode::SYSTEM && i.i.rd == 0 &&
              i.i.rs1 == 0) {
     if (i.i.Imm() == funct12::ECALL) {
-      uint32_t c = this->regFile.Read(10);
+      uint32_t number = rr(10);
+      int32_t arg1 = rr(11);
 
-      cout << (char)c << flush;
+      int32_t result = this->HandleSyscall(number, arg1);
+
+      rw(10, result);
     } else if (i.i.Imm() == funct12::EBREAK) {
       invalidInstruction = true;
     } else
@@ -234,6 +237,16 @@ Instruction Interpreter::ReadInstruction(uint32_t address) const {
   }
 
   return *reinterpret_cast<Instruction *>(&result);
+}
+
+int32_t Interpreter::HandleSyscall(uint32_t number, int32_t arg1) {
+  if (number == 1) {
+    cout << (char)arg1 << flush;
+
+    return 0;
+  }
+
+  return -1;
 }
 
 void Interpreter::rw(uint32_t index, uint32_t value) {
