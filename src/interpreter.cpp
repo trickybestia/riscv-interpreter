@@ -13,7 +13,7 @@ void Interpreter::Tick() {
 
   Instruction i = this->ReadInstruction(this->regFile.PC());
 
-  bool updatePC = true;
+  bool updatePC = true, invalidInstruction = false;
 
   if (i.unknown.opcode == opcode::OP_IMM) {
     if (i.i.funct3 == funct3::ADDI)
@@ -34,10 +34,8 @@ void Interpreter::Tick() {
       rw(i.r.rd, rr(i.r.rs1) >> i.r.rs2);
     else if (i.i.funct3 == funct3::SRAI && i.r.funct7 == funct7::SRAI)
       rw(i.r.rd, static_cast<int32_t>(rr(i.r.rs1)) >> i.r.rs2);
-    else {
-      updatePC = false;
-      this->stop = true;
-    }
+    else
+      invalidInstruction = true;
   } else if (i.unknown.opcode == opcode::LUI) {
     rw(i.u.rd, i.u.Imm());
   } else if (i.unknown.opcode == opcode::AUIPC) {
@@ -64,20 +62,22 @@ void Interpreter::Tick() {
       rw(i.r.rd, rr(i.r.rs1) >> (rr(i.r.rs2) & 0b11111));
     else if (i.r.funct3 == funct3::SRA && i.r.funct7 == funct7::SRA)
       rw(i.r.rd, static_cast<int32_t>(rr(i.r.rs1)) >> (rr(i.r.rs2) & 0b11111));
-    else {
-      updatePC = false;
-      this->stop = true;
-    }
+    else
+      invalidInstruction = true;
   } else if (i.unknown.opcode == opcode::JAL) {
     rw(i.j.rd, this->regFile.PC() + 4);
 
-    this->regFile.PC() += i.j.Imm();
+    int32_t offset = i.j.Imm();
+
+    this->regFile.PC() += offset;
 
     updatePC = false;
   } else if (i.unknown.opcode == opcode::JALR && i.i.funct3 == funct3::JALR) {
     rw(i.i.rd, this->regFile.PC() + 4);
 
-    this->regFile.PC() += (i.i.Imm() + rr(i.i.rs1)) & 0xfffffffe;
+    uint32_t address = (i.i.Imm() + rr(i.i.rs1)) & 0xfffffffe;
+
+    this->regFile.PC() = address;
 
     updatePC = false;
   } else if (i.unknown.opcode == opcode::BRANCH) {
@@ -119,10 +119,8 @@ void Interpreter::Tick() {
 
         updatePC = false;
       }
-    } else {
-      updatePC = false;
-      this->stop = true;
-    }
+    } else
+      invalidInstruction = true;
   } else if (i.unknown.opcode == opcode::LOAD) {
     if (i.i.funct3 == funct3::LW) {
       byte rawValue[4];
@@ -131,7 +129,9 @@ void Interpreter::Tick() {
         rawValue[j] =
             this->mem[(j + rr(i.i.rs1) + i.i.Imm()) % this->mem.size()];
 
-      rw(i.i.rd, *reinterpret_cast<uint32_t *>(&rawValue));
+      uint32_t value = *reinterpret_cast<uint32_t *>(&rawValue);
+
+      rw(i.i.rd, value);
     } else if (i.i.funct3 == funct3::LH) {
       byte rawValue[2];
 
@@ -166,52 +166,52 @@ void Interpreter::Tick() {
         value |= 0xffffff00;
 
       rw(i.i.rd, value);
-    } else if (i.i.funct3 == funct3::LHU) {
-      byte rawValue = this->mem[(rr(i.i.rs1) + i.i.Imm()) % this->mem.size()];
+    } else if (i.i.funct3 == funct3::LBU) {
+      uint32_t address = (rr(i.i.rs1) + i.i.Imm()) % this->mem.size();
+
+      byte rawValue = this->mem[address];
 
       rw(i.i.rd, static_cast<uint32_t>(rawValue));
-    } else {
-      updatePC = false;
-      this->stop = true;
-    }
+    } else
+      invalidInstruction = true;
   } else if (i.unknown.opcode == opcode::STORE) {
     if (i.s.funct3 == funct3::SW) {
       uint32_t value = rr(i.s.rs2);
       byte *rawValue = reinterpret_cast<byte *>(&value);
 
       for (int j = 0; j != 4; j++)
-        this->mem[(j + rr(i.i.rs1) + i.i.Imm()) % this->mem.size()] =
+        this->mem[(j + rr(i.s.rs1) + i.s.Imm()) % this->mem.size()] =
             rawValue[j];
     } else if (i.s.funct3 == funct3::SH) {
       uint32_t value = rr(i.s.rs2);
       byte *rawValue = reinterpret_cast<byte *>(&value);
 
       for (int j = 0; j != 2; j++)
-        this->mem[(j + rr(i.i.rs1) + i.i.Imm()) % this->mem.size()] =
+        this->mem[(j + rr(i.s.rs1) + i.s.Imm()) % this->mem.size()] =
             rawValue[j];
-    } else if (i.s.funct3 == funct3::SW) {
+    } else if (i.s.funct3 == funct3::SB) {
       uint32_t value = rr(i.s.rs2);
       byte *rawValue = reinterpret_cast<byte *>(&value);
 
-      this->mem[(rr(i.i.rs1) + i.i.Imm()) % this->mem.size()] = *rawValue;
-    } else {
-      updatePC = false;
-      this->stop = true;
-    }
+      uint32_t address = (rr(i.s.rs1) + i.s.Imm()) % this->mem.size();
+
+      this->mem[address] = *rawValue;
+    } else
+      invalidInstruction = true;
   } else if (i.unknown.opcode == opcode::SYSTEM && i.i.rd == 0 &&
              i.i.rs1 == 0) {
     if (i.i.Imm() == funct12::ECALL) {
       uint32_t c = this->regFile.Read(10);
 
-      cout << (char)c;
+      cout << (char)c << flush;
     } else if (i.i.Imm() == funct12::EBREAK) {
-      updatePC = false;
-      this->stop = true;
-    } else {
-      updatePC = false;
-      this->stop = true;
-    }
-  } else {
+      invalidInstruction = true;
+    } else
+      invalidInstruction = true;
+  } else
+    invalidInstruction = true;
+
+  if (invalidInstruction) {
     updatePC = false;
     this->stop = true;
   }
