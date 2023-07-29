@@ -5,24 +5,33 @@
 
 void putchar(char c) { syscall(SYSCALL_PUTCHAR, c); }
 
-void printBin(unsigned int n) {
-  bool digits[32];
+void printNumber(uint32_t n) {
+  char digits[10];
 
   for (int i = 0; i != 10; i++) {
-    digits[31 - i] = n & 1;
+    if (n == 0) {
+      digits[9 - i] = 0;
 
-    n >>= 1;
+      continue;
+    }
+
+    digits[9 - i] = '0' + n % 10;
+    n /= 10;
   }
 
-  for (int i = 0; i != 32; i++)
-    putchar('0' + digits[i]);
+  for (int i = 0; i != 10; i++) {
+    if (digits[i] == 0)
+      continue;
+
+    putchar(digits[i]);
+  }
 
   putchar('\n');
 }
 
 int main() {
-  for (int i = 0; i != 100; i++)
-    printBin(i);
+  for (uint32_t i = 2147483648; i != 2147483658; i++)
+    printNumber(i);
 
   return 0;
 }

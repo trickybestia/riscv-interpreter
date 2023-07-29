@@ -59,6 +59,15 @@ enum funct3 {
   AND = 0b111,
 
   FENCE = 0b000,
+
+  MUL = 0b000,
+  MULH = 0b001,
+  MULHSU = 0b010,
+  MULHU = 0b011,
+  DIV = 0b100,
+  DIVU = 0b101,
+  REM = 0b110,
+  REMU = 0b111,
 };
 }
 
@@ -78,6 +87,8 @@ enum funct7 {
   SRA = 0b0100000,
   OR = 0b0000000,
   AND = 0b0000000,
+
+  MULDIV = 0b0000001,
 };
 }
 

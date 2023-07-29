@@ -13,7 +13,7 @@ CLANG="/usr/bin/clang"
 LD="/usr/bin/ld.lld"
 OBJCOPY="/usr/bin/llvm-objcopy"
 
-CFLAGS="$CFLAGS --target=riscv32 -march=rv32i -nostdlib -std=c17 -Os"
+CFLAGS="$CFLAGS --target=riscv32 -march=rv32im -nostdlib -std=c17 -Os"
 LDFLAGS="$LDFLAGS -Tlink.ld"
 
 COMPILE="$BEAR --append --output $BUILDDIR/compile_commands.json -- $CLANG $CFLAGS"

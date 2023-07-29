@@ -65,6 +65,29 @@ void Interpreter::Tick() {
       rw(i.r.rd, rr(i.r.rs1) >> (rr(i.r.rs2) & 0b11111));
     else if (i.r.funct3 == funct3::SRA && i.r.funct7 == funct7::SRA)
       rw(i.r.rd, static_cast<int32_t>(rr(i.r.rs1)) >> (rr(i.r.rs2) & 0b11111));
+    else if (i.r.funct3 == funct3::MUL && i.r.funct7 == funct7::MULDIV)
+      rw(i.r.rd,
+         static_cast<int32_t>(rr(i.r.rs1)) * static_cast<int32_t>(rr(i.r.rs2)));
+    else if (i.r.funct3 == funct3::MULH && i.r.funct7 == funct7::MULDIV)
+      rw(i.r.rd, (static_cast<int64_t>(rr(i.r.rs1)) *
+                  static_cast<int64_t>(rr(i.r.rs2))) >>
+                     32);
+    else if (i.r.funct3 == funct3::MULHU && i.r.funct7 == funct7::MULDIV)
+      rw(i.r.rd, (static_cast<uint64_t>(rr(i.r.rs1)) * rr(i.r.rs2)) >> 32);
+    else if (i.r.funct3 == funct3::MULHSU && i.r.funct7 == funct7::MULDIV)
+      rw(i.r.rd, (static_cast<int32_t>(rr(i.r.rs1)) *
+                  static_cast<uint64_t>(rr(i.r.rs2))) >>
+                     32);
+    else if (i.r.funct3 == funct3::DIV && i.r.funct7 == funct7::MULDIV)
+      rw(i.r.rd,
+         static_cast<int32_t>(rr(i.r.rs1)) / static_cast<int32_t>(rr(i.r.rs2)));
+    else if (i.r.funct3 == funct3::DIVU && i.r.funct7 == funct7::MULDIV)
+      rw(i.r.rd, rr(i.r.rs1) / rr(i.r.rs2));
+    else if (i.r.funct3 == funct3::REM && i.r.funct7 == funct7::MULDIV)
+      rw(i.r.rd,
+         static_cast<int32_t>(rr(i.r.rs1)) % static_cast<int32_t>(rr(i.r.rs2)));
+    else if (i.r.funct3 == funct3::REMU && i.r.funct7 == funct7::MULDIV)
+      rw(i.r.rd, rr(i.r.rs1) % rr(i.r.rs2));
     else
       invalidInstruction = true;
   } else if (i.unknown.opcode == opcode::JAL) {
