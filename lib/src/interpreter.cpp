@@ -1,12 +1,13 @@
-#include <iostream>
-
 #include "interpreter.hpp"
 #include "opcodes.hpp"
 
 using namespace std;
 
-Interpreter::Interpreter(std::byte *mem, uint32_t memLength)
-    : mem(mem), memLength(memLength), isStopped(false) {}
+Interpreter::Interpreter(byte *mem, uint32_t memLength,
+                         int32_t (*syscallHandler)(uint32_t number,
+                                                   int32_t arg1))
+    : mem(mem), memLength(memLength), syscallHandler(syscallHandler),
+      isStopped(false) {}
 
 void Interpreter::Tick() {
   if (this->IsStopped())
@@ -205,7 +206,7 @@ void Interpreter::Tick() {
       uint32_t number = rr(10);
       int32_t arg1 = rr(11);
 
-      int32_t result = this->HandleSyscall(number, arg1);
+      int32_t result = this->syscallHandler(number, arg1);
 
       rw(10, result);
     } else if (i.i.Imm() == funct12::EBREAK) {
@@ -238,16 +239,6 @@ Instruction Interpreter::ReadInstruction(uint32_t address) const {
   }
 
   return *reinterpret_cast<Instruction *>(&result);
-}
-
-int32_t Interpreter::HandleSyscall(uint32_t number, int32_t arg1) {
-  if (number == 1) {
-    cout << (char)arg1 << flush;
-
-    return 0;
-  }
-
-  return -1;
 }
 
 void Interpreter::rw(uint32_t index, uint32_t value) {

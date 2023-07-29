@@ -6,7 +6,9 @@
 extern "C" {
 #endif
 
-void *RiscVInterpreterNew(void *memory, uint32_t memoryLength);
+void *RiscVInterpreterNew(void *memory, uint32_t memoryLength,
+                          int32_t (*syscallHandler)(uint32_t number,
+                                                    int32_t arg1));
 void RiscVInterpreterDelete(void *interpreter);
 
 bool RiscVInterpreterIsStopped(void *interpreter);

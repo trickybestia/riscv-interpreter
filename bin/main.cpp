@@ -1,6 +1,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 #include "../lib/include/riscv-interpreter.h"
@@ -26,6 +27,16 @@ void ReadFile(filesystem::path &path, byte *data, size_t dataLength) {
   file.read(reinterpret_cast<char *>(data), fileSize);
 }
 
+int32_t SyscallHandler(uint32_t number, int32_t arg1) {
+  if (number == 1) {
+    cout << char(arg1) << flush;
+
+    return 0;
+  }
+
+  return -1;
+}
+
 int main(int argc, char **argv) {
   if (argc < 2)
     throw logic_error("file name not provided");
@@ -38,7 +49,7 @@ int main(int argc, char **argv) {
 
   ReadFile(filePath, memory, MEMORY_SIZE);
 
-  void *interpreter = RiscVInterpreterNew(memory, MEMORY_SIZE);
+  void *interpreter = RiscVInterpreterNew(memory, MEMORY_SIZE, SyscallHandler);
 
   while (!RiscVInterpreterIsStopped(interpreter))
     RiscVInterpreterTick(interpreter);
