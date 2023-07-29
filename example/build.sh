@@ -1,5 +1,7 @@
 #!/usr/bin/sh
 
+set -e
+
 mkdir -p build
 
 echo "*" > build/.gitignore
