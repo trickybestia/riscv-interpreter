@@ -7,18 +7,18 @@
 
 class Interpreter {
 public:
-  Interpreter();
+  Interpreter(std::byte *mem, uint32_t memLength);
 
-  std::vector<std::byte> &Mem() { return this->mem; }
-  bool Stop() const { return this->stop; }
+  bool IsStopped() const { return this->isStopped; }
 
   void Tick();
   void Reset();
 
 private:
-  std::vector<std::byte> mem;
+  std::byte *const mem;
+  const uint32_t memLength;
   RegFile regFile;
-  bool stop;
+  bool isStopped;
 
   Instruction ReadInstruction(uint32_t address) const;
 

@@ -3,12 +3,9 @@ project('riscv-interpreter', 'cpp', default_options : [
   'cpp_std=c++20'
 ])
 
-sources = []
-
-subdir('src')
-
 if get_option('buildtype') == 'release'
-  add_project_arguments('-Ofast', '-Werror',  language : 'cpp')
+  add_project_arguments('-Ofast', '-Werror', language : 'cpp')
 endif
 
-exe = executable('riscv-interpreter', sources)
+subdir('lib')
+subdir('bin')

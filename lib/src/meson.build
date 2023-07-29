@@ -1,5 +1,5 @@
 sources += files(
-  'main.cpp',
   'interpreter.cpp',
-  'instructions.cpp'
+  'instructions.cpp',
+  'api.cpp'
 )

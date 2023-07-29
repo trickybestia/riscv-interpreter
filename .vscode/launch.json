@@ -8,7 +8,7 @@
       "type": "lldb",
       "request": "launch",
       "name": "Debug",
-      "program": "${workspaceFolder}/build/riscv-interpreter",
+      "program": "${workspaceFolder}/build/bin/riscv-interpreter",
       "args": [
         "example/build/example.bin"
       ],

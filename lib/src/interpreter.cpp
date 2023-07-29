@@ -5,10 +5,11 @@
 
 using namespace std;
 
-Interpreter::Interpreter() { this->stop = false; }
+Interpreter::Interpreter(std::byte *mem, uint32_t memLength)
+    : mem(mem), memLength(memLength), isStopped(false) {}
 
 void Interpreter::Tick() {
-  if (this->Stop())
+  if (this->IsStopped())
     return;
 
   Instruction i = this->ReadInstruction(this->regFile.PC());
@@ -127,7 +128,7 @@ void Interpreter::Tick() {
 
       for (int j = 0; j != 4; j++)
         rawValue[j] =
-            this->mem[(j + rr(i.i.rs1) + i.i.Imm()) % this->mem.size()];
+            this->mem[(j + rr(i.i.rs1) + i.i.Imm()) % this->memLength];
 
       uint32_t value = *reinterpret_cast<uint32_t *>(&rawValue);
 
@@ -137,7 +138,7 @@ void Interpreter::Tick() {
 
       for (int j = 0; j != 2; j++)
         rawValue[j] =
-            this->mem[(j + rr(i.i.rs1) + i.i.Imm()) % this->mem.size()];
+            this->mem[(j + rr(i.i.rs1) + i.i.Imm()) % this->memLength];
 
       uint32_t value = *reinterpret_cast<uint16_t *>(&rawValue);
 
@@ -152,11 +153,11 @@ void Interpreter::Tick() {
 
       for (int j = 0; j != 2; j++)
         rawValue[j] =
-            this->mem[(j + rr(i.i.rs1) + i.i.Imm()) % this->mem.size()];
+            this->mem[(j + rr(i.i.rs1) + i.i.Imm()) % this->memLength];
 
       rw(i.i.rd, *reinterpret_cast<uint16_t *>(&rawValue));
     } else if (i.i.funct3 == funct3::LB) {
-      byte rawValue = this->mem[(rr(i.i.rs1) + i.i.Imm()) % this->mem.size()];
+      byte rawValue = this->mem[(rr(i.i.rs1) + i.i.Imm()) % this->memLength];
 
       uint32_t value = static_cast<uint32_t>(rawValue);
 
@@ -167,7 +168,7 @@ void Interpreter::Tick() {
 
       rw(i.i.rd, value);
     } else if (i.i.funct3 == funct3::LBU) {
-      uint32_t address = (rr(i.i.rs1) + i.i.Imm()) % this->mem.size();
+      uint32_t address = (rr(i.i.rs1) + i.i.Imm()) % this->memLength;
 
       byte rawValue = this->mem[address];
 
@@ -180,20 +181,20 @@ void Interpreter::Tick() {
       byte *rawValue = reinterpret_cast<byte *>(&value);
 
       for (int j = 0; j != 4; j++)
-        this->mem[(j + rr(i.s.rs1) + i.s.Imm()) % this->mem.size()] =
+        this->mem[(j + rr(i.s.rs1) + i.s.Imm()) % this->memLength] =
             rawValue[j];
     } else if (i.s.funct3 == funct3::SH) {
       uint32_t value = rr(i.s.rs2);
       byte *rawValue = reinterpret_cast<byte *>(&value);
 
       for (int j = 0; j != 2; j++)
-        this->mem[(j + rr(i.s.rs1) + i.s.Imm()) % this->mem.size()] =
+        this->mem[(j + rr(i.s.rs1) + i.s.Imm()) % this->memLength] =
             rawValue[j];
     } else if (i.s.funct3 == funct3::SB) {
       uint32_t value = rr(i.s.rs2);
       byte *rawValue = reinterpret_cast<byte *>(&value);
 
-      uint32_t address = (rr(i.s.rs1) + i.s.Imm()) % this->mem.size();
+      uint32_t address = (rr(i.s.rs1) + i.s.Imm()) % this->memLength;
 
       this->mem[address] = *rawValue;
     } else
@@ -216,7 +217,7 @@ void Interpreter::Tick() {
 
   if (invalidInstruction) {
     updatePC = false;
-    this->stop = true;
+    this->isStopped = true;
   }
 
   if (updatePC)
@@ -224,16 +225,16 @@ void Interpreter::Tick() {
 }
 
 void Interpreter::Reset() {
-  this->Mem().clear();
+  memset(this->mem, 0, this->memLength);
   this->regFile.Reset();
-  this->stop = false;
+  this->isStopped = false;
 }
 
 Instruction Interpreter::ReadInstruction(uint32_t address) const {
   byte result[4];
 
   for (size_t i = 0; i != 4; i++) {
-    result[i] = this->mem[(address + i) % this->mem.size()];
+    result[i] = this->mem[(address + i) % this->memLength];
   }
 
   return *reinterpret_cast<Instruction *>(&result);
