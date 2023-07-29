@@ -27,7 +27,7 @@ void ReadFile(filesystem::path &path, byte *data, size_t dataLength) {
   file.read(reinterpret_cast<char *>(data), fileSize);
 }
 
-int32_t SyscallHandler(uint32_t number, int32_t arg1) {
+int32_t SyscallHandler(void *, uint32_t number, int32_t arg1) {
   if (number == 1) {
     cout << char(arg1) << flush;
 

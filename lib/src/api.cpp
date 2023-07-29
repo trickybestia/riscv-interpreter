@@ -4,7 +4,8 @@
 
 extern "C" {
 void *RiscVInterpreterNew(void *memory, uint32_t memoryLength,
-                          int32_t (*syscallHandler)(uint32_t number,
+                          int32_t (*syscallHandler)(void *interpreter,
+                                                    uint32_t number,
                                                     int32_t arg1)) {
   return new Interpreter(reinterpret_cast<std::byte *>(memory), memoryLength,
                          syscallHandler);

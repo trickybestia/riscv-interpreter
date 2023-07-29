@@ -4,7 +4,8 @@
 using namespace std;
 
 Interpreter::Interpreter(byte *mem, uint32_t memLength,
-                         int32_t (*syscallHandler)(uint32_t number,
+                         int32_t (*syscallHandler)(void *interpreter,
+                                                   uint32_t number,
                                                    int32_t arg1))
     : mem(mem), memLength(memLength), syscallHandler(syscallHandler),
       isStopped(false) {}
@@ -206,7 +207,7 @@ void Interpreter::Tick() {
       uint32_t number = rr(10);
       int32_t arg1 = rr(11);
 
-      int32_t result = this->syscallHandler(number, arg1);
+      int32_t result = this->syscallHandler(this, number, arg1);
 
       rw(10, result);
     } else if (i.i.Imm() == funct12::EBREAK) {
