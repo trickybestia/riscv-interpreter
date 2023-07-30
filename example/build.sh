@@ -13,19 +13,19 @@ main.c
 BUILDDIR="build"
 OBJECTSDIR="$BUILDDIR/objects"
 
-mkdir -p "$OBJECTSDIR"
-
-echo "*" > "$BUILDDIR/.gitignore"
-
-BEAR="/usr/bin/bear"
-CLANG="/usr/bin/clang"
-LD="/usr/bin/ld.lld"
-OBJCOPY="/usr/bin/llvm-objcopy"
+BEAR="bear"
+CLANG="clang"
+LD="ld.lld"
+OBJCOPY="llvm-objcopy"
 
 CFLAGS="$CFLAGS --target=riscv32 -march=rv32im -nostdlib -std=c17 -Os"
 LDFLAGS="$LDFLAGS -Tlink.ld"
 
 COMPILE="$BEAR --append --output $BUILDDIR/compile_commands.json -- $CLANG $CFLAGS"
+
+mkdir -p "$OBJECTSDIR"
+
+echo "*" > "$BUILDDIR/.gitignore"
 
 OBJECTS=()
 
