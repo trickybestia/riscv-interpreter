@@ -1,20 +1,12 @@
-#include <stdbool.h>
-#include <stdint.h>
-
+#include "stdlib.h"
 #include "syscall.h"
 
 void putchar(char c) { syscall(SYSCALL_PUTCHAR, c); }
 
 void printNumber(uint32_t n) {
-  char digits[10];
+  char digits[10] = {0};
 
-  for (int i = 0; i != 10; i++) {
-    if (n == 0) {
-      digits[9 - i] = 0;
-
-      continue;
-    }
-
+  for (int i = 0; i != 10 && n != 0; i++) {
     digits[9 - i] = '0' + n % 10;
     n /= 10;
   }
@@ -30,8 +22,7 @@ void printNumber(uint32_t n) {
 }
 
 int main() {
-  for (uint32_t i = 2147483648; i != 2147483658; i++)
-    printNumber(i);
+  printNumber(sizeof(size_t) * 100);
 
   return 0;
 }
