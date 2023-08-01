@@ -26,6 +26,11 @@ private:
 
   Instruction ReadInstruction(uint32_t address) const;
 
+  void ReadMemory(std::byte *buffer, size_t count, uint32_t address) const;
+  void WriteMemory(std::byte *buffer, size_t count, uint32_t address);
+
   void rw(uint32_t index, uint32_t value); // Register Write
   uint32_t rr(uint32_t index) const;       // Register Read
+
+  void ThrowMemoryOutOfRangeException(uint32_t address) const;
 };
